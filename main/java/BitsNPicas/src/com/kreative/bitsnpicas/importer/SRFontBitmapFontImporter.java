@@ -66,6 +66,10 @@ public class SRFontBitmapFontImporter implements BitmapFontImporter {
 		return f;
 	}
 	
+	public boolean canImportFont(BufferedImage bi) {
+		return bi != null && decodeVM(bi, 0, 0, bi.getHeight()) != null;
+	}
+	
 	public BitmapFont importFont(BufferedImage bi) {
 		int[] mtx = decodeVM(bi, 0, 0, bi.getHeight());
 		if (mtx == null) return null;
@@ -155,11 +159,12 @@ public class SRFontBitmapFontImporter implements BitmapFontImporter {
 					}
 				}
 			}
-			BitmapFont bm = new BitmapFont(mtx[EM_ASCENT], mtx[EM_DESCENT], mtx[LINE_ASCENT], mtx[LINE_DESCENT], mtx[X_HEIGHT], mtx[LINE_GAP]);
+			BitmapFont bm = new BitmapFont(mtx[EM_ASCENT], mtx[EM_DESCENT], mtx[LINE_ASCENT], mtx[LINE_DESCENT], mtx[X_HEIGHT], mtx[X_HEIGHT], mtx[LINE_GAP]);
 			bm.putCharacter(32, new BitmapFontGlyph(new byte[bh-1][tw/g.length], 0, tw/g.length, mtx[MAX_ASCENT]));
 			for (int i = 0; i < g.length; i++) {
 				bm.putCharacter(i+33, new BitmapFontGlyph(g[i], -l[i], w[i], mtx[MAX_ASCENT]));
 			}
+			bm.setCapHeight();
 			return bm;
 		} else {
 			// RFont
@@ -204,10 +209,11 @@ public class SRFontBitmapFontImporter implements BitmapFontImporter {
 					}
 				}
 			}
-			BitmapFont bm = new BitmapFont(mtx[EM_ASCENT], mtx[EM_DESCENT], mtx[LINE_ASCENT], mtx[LINE_DESCENT], mtx[X_HEIGHT], mtx[LINE_GAP]);
+			BitmapFont bm = new BitmapFont(mtx[EM_ASCENT], mtx[EM_DESCENT], mtx[LINE_ASCENT], mtx[LINE_DESCENT], mtx[X_HEIGHT], mtx[X_HEIGHT], mtx[LINE_GAP]);
 			for (int ch : g.keySet()) {
 				bm.putCharacter(ch, new BitmapFontGlyph(g.get(ch), -l.get(ch), w.get(ch), mtx[MAX_ASCENT]));
 			}
+			bm.setCapHeight();
 			return bm;
 		}
 	}

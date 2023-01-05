@@ -10,16 +10,16 @@ import com.kreative.bitsnpicas.BitmapFont;
 import com.kreative.bitsnpicas.BitmapFontGlyph;
 import com.kreative.bitsnpicas.BitmapFontImporter;
 import com.kreative.bitsnpicas.Font;
-import com.kreative.bitsnpicas.unicode.EncodingTable;
+import com.kreative.unicode.data.GlyphList;
 
 public class CybikoBitmapFontImporter implements BitmapFontImporter {
-	private EncodingTable encoding;
+	private GlyphList encoding;
 	
 	public CybikoBitmapFontImporter() {
 		this.encoding = null;
 	}
 	
-	public CybikoBitmapFontImporter(EncodingTable encoding) {
+	public CybikoBitmapFontImporter(GlyphList encoding) {
 		this.encoding = encoding;
 	}
 	
@@ -50,6 +50,8 @@ public class CybikoBitmapFontImporter implements BitmapFontImporter {
 			name = name.substring(0, name.length() - 4);
 		} else if (name.toLowerCase().endsWith(".fntz")) {
 			name = name.substring(0, name.length() - 5);
+		} else if (name.toLowerCase().endsWith(".fnty")) {
+			name = name.substring(0, name.length() - 5);
 		}
 		f.setName(Font.NAME_FAMILY, name);
 		
@@ -62,7 +64,7 @@ public class CybikoBitmapFontImporter implements BitmapFontImporter {
 		/* mw */ in.readUnsignedByte();
 		int mh = in.readUnsignedByte();
 		int ascent = mh;
-		BitmapFont f = new BitmapFont(mh, 0, mh, 0, 0, 0);
+		BitmapFont f = new BitmapFont(mh, 0, mh, 0, 0, 0, 0);
 		
 		for (int c = 0; c < cc; c++) {
 			int l = in.readUnsignedByte();
@@ -98,6 +100,7 @@ public class CybikoBitmapFontImporter implements BitmapFontImporter {
 		}
 		
 		f.setXHeight();
+		f.setCapHeight();
 		return f;
 	}
 	
@@ -109,8 +112,8 @@ public class CybikoBitmapFontImporter implements BitmapFontImporter {
 			case 0x81: return 0x25CF; // black circle
 			case 0x82: return 0x25B6; // black right-pointing triangle
 			case 0x83: return 0x25B7; // white right-pointing triangle
-			case 0x84: return 0xF084; // white right-pointing triangle, duplicate?
-			case 0x85: return 0xF085; // cy-sign
+			case 0x84: return 0xFFC22; // white right-pointing triangle, duplicate?
+			case 0x85: return 0xFFC23; // cy-sign
 			// Windows CP-1252
 			case 0x86: return 0x2020; // dagger
 			case 0x87: return 0x2021; // double dagger

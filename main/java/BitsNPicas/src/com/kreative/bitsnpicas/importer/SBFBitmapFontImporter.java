@@ -11,16 +11,16 @@ import com.kreative.bitsnpicas.BitmapFont;
 import com.kreative.bitsnpicas.BitmapFontGlyph;
 import com.kreative.bitsnpicas.BitmapFontImporter;
 import com.kreative.bitsnpicas.Font;
-import com.kreative.bitsnpicas.unicode.EncodingTable;
+import com.kreative.unicode.data.GlyphList;
 
 public class SBFBitmapFontImporter implements BitmapFontImporter {
-	private EncodingTable encoding;
+	private GlyphList encoding;
 	
 	public SBFBitmapFontImporter() {
 		this.encoding = null;
 	}
 	
-	public SBFBitmapFontImporter(EncodingTable encoding) {
+	public SBFBitmapFontImporter(GlyphList encoding) {
 		this.encoding = encoding;
 	}
 	
@@ -32,7 +32,7 @@ public class SBFBitmapFontImporter implements BitmapFontImporter {
 		int height = in.readUnsignedByte();
 		int ascent = in.readUnsignedByte();
 		int descent = in.readUnsignedByte();
-		BitmapFont f = new BitmapFont(ascent, descent, ascent, descent, 0, height - ascent - descent);
+		BitmapFont f = new BitmapFont(ascent, descent, ascent, descent, 0, 0, height - ascent - descent);
 		
 		int[] offset = new int[256];
 		int[] gwidth = new int[256];
@@ -70,6 +70,7 @@ public class SBFBitmapFontImporter implements BitmapFontImporter {
 		
 		in.close();
 		f.setXHeight();
+		f.setCapHeight();
 		return new BitmapFont[]{f};
 	}
 	

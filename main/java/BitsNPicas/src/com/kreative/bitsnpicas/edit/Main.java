@@ -15,13 +15,14 @@ import com.kreative.bitsnpicas.BitmapFontExporter;
 import com.kreative.bitsnpicas.BitmapFontGlyph;
 import com.kreative.bitsnpicas.Font;
 import com.kreative.bitsnpicas.FontExporter;
-import com.kreative.bitsnpicas.FontGlyph;
 import com.kreative.bitsnpicas.FontImporter;
+import com.kreative.bitsnpicas.MacUtility;
 import com.kreative.bitsnpicas.VectorFont;
 import com.kreative.bitsnpicas.VectorFontExporter;
 import com.kreative.bitsnpicas.VectorFontGlyph;
-import com.kreative.bitsnpicas.exporter.KBnPBitmapFontExporter;
-import com.kreative.bitsnpicas.exporter.KBnPVectorFontExporter;
+import com.kreative.bitsnpicas.edit.importer.ImportFormat;
+import com.kreative.bitsnpicas.exporter.KbitxBitmapFontExporter;
+import com.kreative.bitsnpicas.exporter.KpcaxVectorFontExporter;
 
 public class Main {
 	public static void main(String[] args) {
@@ -45,6 +46,11 @@ public class Main {
 			aacn.set(tk, "BitsNPicas");
 		} catch (Exception e) {}
 		
+		if (CommonMenuItems.IS_MAC_OS) {
+			try { Class.forName("com.kreative.bitsnpicas.edit.mac.MacDummyWindow").newInstance(); }
+			catch (Exception e) { e.printStackTrace(); }
+		}
+		
 		if (args.length == 0) {
 			newBitmapFont();
 		} else {
@@ -60,22 +66,28 @@ public class Main {
 	}
 	
 	public static JFrame newBitmapFont() {
-		BitmapFont bfont = new BitmapFont();
+		BitmapFont bfont = new BitmapFont(14, 2, 14, 2, 0, 0, 0);
 		bfont.autoFillNames();
-		return openFont(null, new KBnPBitmapFontExporter(), bfont);
+		return openFont(null, new KbitxBitmapFontExporter(), bfont);
 	}
 	
 	public static JFrame newVectorFont() {
-		VectorFont vfont = new VectorFont();
+		VectorFont vfont = new VectorFont(800, 200, 800, 200, 0, 0, 0);
 		vfont.autoFillNames();
-		return openFont(null, new KBnPVectorFontExporter(), vfont);
+		return openFont(null, new KpcaxVectorFontExporter(), vfont);
 	}
 	
+	private static String lastOpenDirectory = null;
 	public static JFrame openFonts() {
-		FileDialog fd = new FileDialog(new Frame(), "Open", FileDialog.LOAD);
+		Frame frame = new Frame();
+		FileDialog fd = new FileDialog(frame, "Open", FileDialog.LOAD);
+		if (lastOpenDirectory != null) fd.setDirectory(lastOpenDirectory);
 		fd.setVisible(true);
-		if (fd.getDirectory() == null || fd.getFile() == null) return null;
-		File file = new File(fd.getDirectory(), fd.getFile());
+		String ds = fd.getDirectory(), fs = fd.getFile();
+		fd.dispose();
+		frame.dispose();
+		if (ds == null || fs == null) return null;
+		File file = new File((lastOpenDirectory = ds), fs);
 		return openFonts(file);
 	}
 	
@@ -83,10 +95,7 @@ public class Main {
 		try {
 			ImportFormat format = ImportFormat.forFile(file);
 			if (format != null) {
-				if (format.macResFork) {
-					file = new File(file, "..namedfork");
-					file = new File(file, "rsrc");
-				}
+				if (format.macResFork) file = MacUtility.getResourceFork(file);
 				FontImporter<?> importer = format.createImporter();
 				if (importer != null) {
 					Font<?>[] fonts = importer.importFont(file);
@@ -152,13 +161,15 @@ public class Main {
 		} else if (font instanceof VectorFont) {
 			VectorFontExporter vformat = (VectorFontExporter)format;
 			VectorFont vfont = (VectorFont)font;
-			JFrame f = new GlyphListFrame(fontFile, vformat, vfont);
+			JFrame f = new GlyphListFrame<VectorFontGlyph>(fontFile, vformat, vfont);
 			f.setVisible(true);
 			return f;
 		} else {
-			JFrame f = new GlyphListFrame(fontFile, format, font);
-			f.setVisible(true);
-			return f;
+			JOptionPane.showMessageDialog(
+				null, "The selected font was not recognized by the Bits'n'Picas editor.",
+				"Open", JOptionPane.ERROR_MESSAGE
+			);
+			return null;
 		}
 	}
 	
@@ -170,67 +181,77 @@ public class Main {
 			return f;
 		} else if (font instanceof VectorFont) {
 			VectorFont vfont = (VectorFont)font;
-			JFrame f = new GlyphListFrame(routine, vfont);
+			JFrame f = new GlyphListFrame<VectorFontGlyph>(routine, vfont);
 			f.setVisible(true);
 			return f;
 		} else {
-			JFrame f = new GlyphListFrame(routine, font);
-			f.setVisible(true);
-			return f;
+			JOptionPane.showMessageDialog(
+				null, "The selected font was not recognized by the Bits'n'Picas editor.",
+				"Open", JOptionPane.ERROR_MESSAGE
+			);
+			return null;
 		}
 	}
 	
-	public static JFrame openGlyph(Font<?> font, int codePoint, GlyphList gl, SaveManager sm) {
+	public static JFrame openGlyph(Font<?> font, GlyphLocator<?> loc, GlyphList<?> gl, SaveManager sm) {
 		if (font instanceof BitmapFont) {
 			BitmapFont bfont = (BitmapFont)font;
-			BitmapFontGlyph bglyph = bfont.getCharacter(codePoint);
-			if (bglyph == null) {
-				bglyph = new BitmapFontGlyph();
-				bfont.putCharacter(codePoint, bglyph);
-				gl.glyphsChanged();
+			@SuppressWarnings("unchecked")
+			GlyphLocator<BitmapFontGlyph> bloc = (GlyphLocator<BitmapFontGlyph>)loc;
+			@SuppressWarnings("unchecked")
+			GlyphList<BitmapFontGlyph> bgl = (GlyphList<BitmapFontGlyph>)gl;
+			if (bloc.getGlyph() == null) {
+				bloc.setGlyph(new BitmapFontGlyph());
+				bgl.glyphRepertoireChanged();
 			}
-			JFrame f = new BitmapEditFrame(bfont, bglyph, codePoint, gl, sm);
+			JFrame f = new BitmapEditFrame(bfont, bloc, bgl, sm);
 			f.setVisible(true);
 			return f;
 		} else if (font instanceof VectorFont) {
 			VectorFont vfont = (VectorFont)font;
-			VectorFontGlyph vglyph = vfont.getCharacter(codePoint);
-			if (vglyph == null) {
-				vglyph = new VectorFontGlyph();
-				vfont.putCharacter(codePoint, vglyph);
-				gl.glyphsChanged();
+			@SuppressWarnings("unchecked")
+			GlyphLocator<VectorFontGlyph> vloc = (GlyphLocator<VectorFontGlyph>)loc;
+			@SuppressWarnings("unchecked")
+			GlyphList<VectorFontGlyph> vgl = (GlyphList<VectorFontGlyph>)gl;
+			if (vloc.getGlyph() == null) {
+				vloc.setGlyph(new VectorFontGlyph());
+				vgl.glyphRepertoireChanged();
 			}
-			JFrame f = new GlyphEditFrame(vfont, vglyph, codePoint, gl, sm);
+			JFrame f = new GlyphEditFrame<VectorFontGlyph>(VectorFontGlyph.class, vfont, vloc, vgl, sm);
 			f.setVisible(true);
 			return f;
 		} else {
-			FontGlyph glyph = font.getCharacter(codePoint);
-			if (glyph == null) return null;
-			JFrame f = new GlyphEditFrame(font, glyph, codePoint, gl, sm);
-			f.setVisible(true);
-			return f;
+			JOptionPane.showMessageDialog(
+				null, "The selected font was not recognized by the Bits'n'Picas editor.",
+				"Open", JOptionPane.ERROR_MESSAGE
+			);
+			return null;
 		}
 	}
 	
 	public static String getSaveSuffix(Font<?> font) {
-		if (font instanceof BitmapFont) return ".kbits";
-		if (font instanceof VectorFont) return ".kpcas";
+		if (font instanceof BitmapFont) return ".kbitx";
+		if (font instanceof VectorFont) return ".kpcax";
 		return null;
 	}
 	
+	private static String lastSaveDirectory = null;
 	public static File getSaveFile(String suffix) {
-		FileDialog fd = new FileDialog(new Frame(), "Save", FileDialog.SAVE);
+		Frame frame = new Frame();
+		FileDialog fd = new FileDialog(frame, "Save", FileDialog.SAVE);
+		if (lastSaveDirectory != null) fd.setDirectory(lastSaveDirectory);
 		fd.setVisible(true);
-		String parent = fd.getDirectory();
-		String name = fd.getFile();
-		if (parent == null || name == null) return null;
-		if (!name.toLowerCase().endsWith(suffix.toLowerCase())) name += suffix;
-		return new File(parent, name);
+		String ds = fd.getDirectory(), fs = fd.getFile();
+		fd.dispose();
+		frame.dispose();
+		if (ds == null || fs == null) return null;
+		if (!fs.toLowerCase().endsWith(suffix.toLowerCase())) fs += suffix;
+		return new File((lastSaveDirectory = ds), fs);
 	}
 	
 	public static FontExporter<?> getSaveFormat(Font<?> font) {
-		if (font instanceof BitmapFont) return new KBnPBitmapFontExporter();
-		if (font instanceof VectorFont) return new KBnPVectorFontExporter();
+		if (font instanceof BitmapFont) return new KbitxBitmapFontExporter();
+		if (font instanceof VectorFont) return new KpcaxVectorFontExporter();
 		return null;
 	}
 	

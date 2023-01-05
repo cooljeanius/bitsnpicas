@@ -5,7 +5,6 @@ import java.util.*;
 import com.kreative.bitsnpicas.BitmapFont;
 import com.kreative.bitsnpicas.BitmapFontGlyph;
 import com.kreative.bitsnpicas.BitmapFontImporter;
-import com.kreative.bitsnpicas.Font;
 
 public class SFDBitmapFontImporter implements BitmapFontImporter {
 	public BitmapFont[] importFont(byte[] data) throws IOException {
@@ -17,11 +16,14 @@ public class SFDBitmapFontImporter implements BitmapFontImporter {
 	}
 
 	public BitmapFont[] importFont(File file) throws IOException {
-		return importFont(new Scanner(file, "UTF-8"));
+		return importFont(new Scanner(new FileInputStream(file), "UTF-8"));
 	}
 	
 	public BitmapFont[] importFont(Scanner scan) throws IOException {
 		Map<Integer,String> names = new HashMap<Integer,String>();
+		String currentGlyphName = null;
+		Map<Integer,String> glyphNames = new HashMap<Integer,String>();
+		Map<Integer,Integer> codePoints = new HashMap<Integer,Integer>();
 		Vector<BitmapFont> fonts = new Vector<BitmapFont>();
 		BitmapFont bm = null;
 		String bitmapBuffer = null;
@@ -30,17 +32,30 @@ public class SFDBitmapFontImporter implements BitmapFontImporter {
 			String l = scan.nextLine();
 			if (bm == null) {
 				if (l.startsWith("Copyright: ")) {
-					names.put(Font.NAME_COPYRIGHT, decodeEscapes(l.split(":\\s*", 2)[1]));
+					names.put(BitmapFont.NAME_COPYRIGHT, decodeEscapes(l.split(":\\s*", 2)[1]));
 				} else if (l.startsWith("FamilyName: ")) {
-					names.put(Font.NAME_FAMILY, decodeEscapes(l.split(":\\s*", 2)[1]));
+					names.put(BitmapFont.NAME_FAMILY, decodeEscapes(l.split(":\\s*", 2)[1]));
 				} else if (l.startsWith("Weight: ")) {
-					names.put(Font.NAME_STYLE, decodeEscapes(l.split(":\\s*", 2)[1]));
+					names.put(BitmapFont.NAME_STYLE, decodeEscapes(l.split(":\\s*", 2)[1]));
+				} else if (l.startsWith("StartChar: ")) {
+					currentGlyphName = decodeEscapes(l.split(":\\s*", 2)[1]);
+				} else if (l.startsWith("Encoding: ")) {
+					if (currentGlyphName != null) {
+						l = l.split(":\\s*", 2)[1];
+						String[] nums = l.split("\\s");
+						int local = Integer.parseInt(nums[0]);
+						int unicode = Integer.parseInt(nums[1]);
+						if (unicode >= 0) codePoints.put(local, unicode);
+						else glyphNames.put(local, currentGlyphName);
+					}
+				} else if (l.equals("EndChar")) {
+					currentGlyphName = null;
 				} else if (l.startsWith("BitmapFont: ")) {
 					l = l.split(":\\s*", 2)[1];
 					String[] nums = l.split("\\s");
 					int a = Integer.parseInt(nums[2]);
 					int d = Integer.parseInt(nums[3]);
-					bm = new BitmapFont(a, d, a, d, 0, 0);
+					bm = new BitmapFont(a, d, a, d, 0, 0, 0);
 					for (Map.Entry<Integer,String> e : names.entrySet()) {
 						bm.setName(e.getKey(), e.getValue());
 					}
@@ -62,9 +77,11 @@ public class SFDBitmapFontImporter implements BitmapFontImporter {
 							}
 						}
 						BitmapFontGlyph bc = new BitmapFontGlyph(glyph, bbx, cw, bby+bbh);
-						bm.putCharacter(ch, bc);
+						if (codePoints.containsKey(ch)) bm.putCharacter(codePoints.get(ch), bc);
+						if (glyphNames.containsKey(ch)) bm.putNamedGlyph(glyphNames.get(ch), bc);
 					}
 					bm.setXHeight();
+					bm.setCapHeight();
 					fonts.add(bm);
 					bm = null;
 				} else if (l.startsWith("Resolution: ")) {
@@ -85,7 +102,8 @@ public class SFDBitmapFontImporter implements BitmapFontImporter {
 							}
 						}
 						BitmapFontGlyph bc = new BitmapFontGlyph(glyph, bbx, cw, bby+bbh);
-						bm.putCharacter(ch, bc);
+						if (codePoints.containsKey(ch)) bm.putCharacter(codePoints.get(ch), bc);
+						if (glyphNames.containsKey(ch)) bm.putNamedGlyph(glyphNames.get(ch), bc);
 					}
 					l = l.split(":\\s*", 2)[1];
 					String[] nums = l.split("\\s");
@@ -119,9 +137,11 @@ public class SFDBitmapFontImporter implements BitmapFontImporter {
 					}
 				}
 				BitmapFontGlyph bc = new BitmapFontGlyph(glyph, bbx, cw, bby+bbh);
-				bm.putCharacter(ch, bc);
+				if (codePoints.containsKey(ch)) bm.putCharacter(codePoints.get(ch), bc);
+				if (glyphNames.containsKey(ch)) bm.putNamedGlyph(glyphNames.get(ch), bc);
 			}
 			bm.setXHeight();
+			bm.setCapHeight();
 			fonts.add(bm);
 			bm = null;
 		}

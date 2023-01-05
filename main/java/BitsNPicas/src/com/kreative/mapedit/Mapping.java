@@ -11,8 +11,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 import java.util.Scanner;
-import com.kreative.bitsnpicas.unicode.CharacterData;
-import com.kreative.bitsnpicas.unicode.CharacterDatabase;
+import com.kreative.unicode.data.NameResolver;
 
 public class Mapping {
 	public String name = null;
@@ -71,13 +70,15 @@ public class Mapping {
 			if (cs != null) {
 				String csc = CodePointSequence.format(cs);
 				if (cs.length() == 1) {
-					CharacterData data = CharacterDatabase.instance().get(cs.get(0));
-					if (data != null) csc += "\t# " + data.toString();
+					int cp = cs.get(0);
+					String n = NameResolver.instance(cp).getName(cp);
+					csc += "\t# " + n;
 				} else if (cs.length() == 2) {
 					MappingTag tag = MappingTag.forIntValue(cs.get(0));
 					if (tag != null) {
-						CharacterData data = CharacterDatabase.instance().get(cs.get(1));
-						if (data != null) csc += "\t# " + data.toString() + ", " + tag.description;
+						int cp = cs.get(1);
+						String n = NameResolver.instance(cp).getName(cp);
+						csc += "\t# " + n + ", " + tag.description;
 					}
 				}
 				out.println(pfxi + "\t" + csc);
@@ -101,17 +102,25 @@ public class Mapping {
 			in[pos] = (byte)ch;
 			ByteBuffer inb = ByteBuffer.wrap(in, 0, pos + 1);
 			CharBuffer outb = CharBuffer.wrap(out);
-			decoder.reset();
-			decoder.decode(inb, outb, false);
-			// Do NOT finish the decode so we can distinguish
-			// incomplete input from invalid input.
+			try {
+				decoder.reset();
+				decoder.decode(inb, outb, false);
+				// Do NOT finish the decode so we can distinguish
+				// incomplete input from invalid input.
+			} catch (Exception e) {
+				System.err.println("Failed to decode encoding " + name + "; it should be added to the list of broken charsets.");
+				e.printStackTrace();
+				continue;
+			}
 			if (outb.position() > 0) {
 				String s = new String(out, 0, outb.position());
 				if (s.contains("\uFFFF")) continue;
 				CodePointSequence cps = new CodePointSequence(s);
 				root.setSequence(cps, in, 0, pos + 1);
-			} else {
+			} else if (pos + 1 < in.length) {
 				decode(decoder, in, pos + 1, out);
+			} else {
+				System.err.println("Failed to decode encoding " + name + "; it should be added to the list of broken charsets.");
 			}
 		}
 	}
