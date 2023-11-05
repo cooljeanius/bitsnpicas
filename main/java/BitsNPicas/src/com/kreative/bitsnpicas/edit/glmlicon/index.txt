@@ -677,6 +677,7 @@ macos.png       encoding    MacThai
 macos.png       encoding    MacTurkish
 macos.png       encoding    MacUkraine
 macos.png       encoding    MacVT100
+apple2.png      encoding    MouseDesk
 jis.png         encoding    Shift_JIS
 tis.png         encoding    TIS-620
 apple2.png      encoding    U8/M Apple II
@@ -684,6 +685,7 @@ atarist.png     encoding    U8/M Atari ST
 atari8.png      encoding    U8/M ATASCII
 petscii.png     encoding    U8/M PETSCII
 riscos.png      encoding    U8/M RISC OS
+sharpmz.png     encoding    U8/M SharpSCII
 speccy.png      encoding    U8/M Spectrum
 us.png          encoding    US-ASCII
 unicode.png     encoding    UTF-8
@@ -714,6 +716,7 @@ apple2.png      encoding    x-apple2gs-emoji
 apple2.png      encoding    x-apple2gs-linux
 apple2.png      encoding    x-apple2gs-mod
 apple2.png      encoding    x-apple2gs-pua
+apple2.png      encoding    x-apple2-mousedesk
 atarist.png     encoding    x-atarist
 atarist.png     encoding    x-atarist-video
 atari8.png      encoding    x-atascii
@@ -830,6 +833,16 @@ petscii.png     encoding    x-petscii-alt-video
 petscii.png     encoding    x-petscii-video
 petscii.png     encoding    x-petscii8
 riscos.png      encoding    x-riscos
+sharpmz.png     encoding    x-sharpscii
+sharpmz.png     encoding    x-sharpscii-700
+sharpmz.png     encoding    x-sharpscii-700-alt-video
+sharpmz.png     encoding    x-sharpscii-700-video
+sharpmz.png     encoding    x-sharpscii-80a
+sharpmz.png     encoding    x-sharpscii-80a-video
+sharpmz.png     encoding    x-sharpscii-80k
+sharpmz.png     encoding    x-sharpscii-80k-video
+sharpmz.png     encoding    x-sharpscii-alt-video
+sharpmz.png     encoding    x-sharpscii-video
 sinql.png       encoding    x-sinclairql
 sinql.png       encoding    x-sinclairql-video
 jis.png         encoding    x-SJIS_0213

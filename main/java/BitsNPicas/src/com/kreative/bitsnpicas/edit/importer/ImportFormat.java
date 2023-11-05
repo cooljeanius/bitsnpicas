@@ -110,7 +110,9 @@ public enum ImportFormat {
 	},
 	FNT {
 		public boolean recognize(FileProxy fp) {
-			return fp.hasExtension(".fnt") && fp.startsWith(0);
+			if (!fp.hasExtension(".fnt")) return false;
+			byte[] b = fp.getStartBytes(2);
+			return b != null && b[0] == 0 && b[1] >= 1 && b[1] <= 3;
 		}
 		public JFrame createOptionFrame(File file) throws IOException {
 			return new EncodingSelectionFrame("CP1252", file, new EncodingSelectionImporter() {
@@ -129,6 +131,21 @@ public enum ImportFormat {
 			return new DualEncodingSelectionFrame("CP437", dben, file, new DualEncodingSelectionImporter() {
 				public FontImporter<?> createImporter(GlyphList sbenc, String dbenc) {
 					return new FONTXBitmapFontImporter(sbenc, dbenc);
+				}
+			});
+		}
+	},
+	MGTK {
+		public boolean recognize(FileProxy fp) {
+			return (
+				fp.hasExtension(".mgf", ".mpf", ".fnt") &&
+				(fp.startsWith(0) || fp.startsWith(0x80))
+			);
+		}
+		public JFrame createOptionFrame(File file) throws IOException {
+			return new EncodingSelectionFrame("MouseDesk", file, new EncodingSelectionImporter() {
+				public FontImporter<?> createImporter(GlyphList encoding) {
+					return new MGTKBitmapFontImporter(encoding);
 				}
 			});
 		}
@@ -160,6 +177,10 @@ public enum ImportFormat {
 		public FontImporter<?> createImporter() {
 			return new PlaydateBitmapFontImporter();
 		}
+	},
+	HRCG {
+		public boolean recognize(FileProxy fp) { return fp.hasExtension(".set"); }
+		public FontImporter<?> createImporter() { return new HRCGBitmapFontImporter(); }
 	},
 	HMZK {
 		public boolean recognize(FileProxy fp) { return fp.hasExtension(".hmzk"); }
@@ -211,6 +232,18 @@ public enum ImportFormat {
 		public boolean recognize(FileProxy fp) { return fp.isImage(); }
 		public JFrame createOptionFrame(File file) throws IOException {
 			return new ImageBitmapFontImporterFrame(file);
+		}
+	},
+	MGTK_NOEXT {
+		public boolean recognize(FileProxy fp) {
+			return fp.startsWith(0) || fp.startsWith(0x80);
+		}
+		public JFrame createOptionFrame(File file) throws IOException {
+			return new EncodingSelectionFrame("MouseDesk", file, new EncodingSelectionImporter() {
+				public FontImporter<?> createImporter(GlyphList encoding) {
+					return new MGTKBitmapFontImporter(encoding);
+				}
+			});
 		}
 	};
 	

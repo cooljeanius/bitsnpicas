@@ -147,6 +147,11 @@ public enum BitmapOutputFormat {
 			}
 		}
 	},
+	MGTK(".fnt", "mgtk", "mgf", "mpf", "mousepaint") {
+		public BitmapFontExporter createExporter(BitmapOutputOptions o) {
+			return new MGTKBitmapFontExporter(o.getEncoding());
+		}
+	},
 	RB12(".fnt", "rb12") {
 		public BitmapFontExporter createExporter(BitmapOutputOptions o) {
 			return new RockboxBitmapFontExporter(RockboxBitmapFontExporter.RB12);
@@ -170,6 +175,11 @@ public enum BitmapOutputFormat {
 	PLAYDATE_FNT_PNG(".fnt", "playdate-separate", "playdate-fnt+png") {
 		public BitmapFontExporter createExporter(BitmapOutputOptions o) {
 			return new PlaydateBitmapFontExporter(true);
+		}
+	},
+	HRCG(".set", "hrcg", "set") {
+		public BitmapFontExporter createExporter(BitmapOutputOptions o) {
+			return new HRCGBitmapFontExporter();
 		}
 	},
 	HMZK(".hmzk", "hmzk") {

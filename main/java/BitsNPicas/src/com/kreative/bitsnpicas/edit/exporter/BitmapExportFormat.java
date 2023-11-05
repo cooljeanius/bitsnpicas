@@ -128,6 +128,11 @@ public enum BitmapExportFormat {
 			}
 		}
 	},
+	MGTK("MGTK (Apple II MouseGraphics ToolKit)", ".fnt", "encoding", "MouseDesk") {
+		public BitmapFontExporter createExporter(BitmapExportOptions o) {
+			return new MGTKBitmapFontExporter(o.getSelectedEncoding());
+		}
+	},
 	RB12("RB12 (Rockbox 2.3 or above)", ".fnt", "none") {
 		public BitmapFontExporter createExporter(BitmapExportOptions o) {
 			return new RockboxBitmapFontExporter(RockboxBitmapFontExporter.RB12);
@@ -146,6 +151,11 @@ public enum BitmapExportFormat {
 	PLAYDATE("Playdate", ".fnt", "playdate") {
 		public BitmapFontExporter createExporter(BitmapExportOptions o) {
 			return new PlaydateBitmapFontExporter(o.getPlaydateSeparate());
+		}
+	},
+	HRCG("HRCG (Apple II Hi-Res Character Generator)", ".set", "none") {
+		public BitmapFontExporter createExporter(BitmapExportOptions o) {
+			return new HRCGBitmapFontExporter();
 		}
 	},
 	HMZK("HMZK (Mi Band 2)", ".hmzk", "none") {
